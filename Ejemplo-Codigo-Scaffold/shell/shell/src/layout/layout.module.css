@@ -1,0 +1,10 @@
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+.header { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--border); }
+.brand { color: var(--accent); }
+.nav { display: flex; gap: 1rem; flex: 1; }
+.nav a { color: var(--text); text-decoration: none; padding: 0.25rem 0.5rem; border-radius: 4px; }
+.nav a:global(.active) { background: var(--accent); color: var(--accent-text); }
+.right { display: flex; gap: 1rem; align-items: center; }
+.user { font-size: 0.9rem; }
+.badge { background: #b42318; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.25rem; }
+.main { padding: 1.5rem; flex: 1; }

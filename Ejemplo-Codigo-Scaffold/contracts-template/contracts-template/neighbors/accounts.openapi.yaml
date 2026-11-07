@@ -1,0 +1,35 @@
+openapi: 3.1.0
+info:
+  title: Accounts (vecino simulado) — ejemplo del kit
+  version: 1.0.0
+  description: >
+    Ejemplo de contrato de un dominio vecino (posteo de movimientos en cuenta). Solo lo que el dominio del
+    equipo consume. Lo sirve el simulador del kit en http://localhost:8090 (prioridad baja, ADR-013).
+servers:
+  - url: http://localhost:8090
+paths:
+  /api/v1/postings:
+    post:
+      operationId: createPosting
+      responses:
+        '201':
+          description: Movimiento posteado
+          content:
+            application/json:
+              example: { id: "PST-0001", status: "POSTED", balanceAfter: { amount: "1500.00", currency: "PEN" } }
+        '422':
+          description: Saldo insuficiente
+          content:
+            application/problem+json:
+              example: { type: "https://errors.andes.example/accounts/AC-0020", title: "Saldo insuficiente", status: 422, code: "AC-0020" }
+  /api/v1/accounts/{id}:
+    get:
+      operationId: getAccount
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Cuenta
+          content:
+            application/json:
+              example: { id: "ACC-001", status: "ACTIVE", currency: "PEN", availableBalance: { amount: "2500.00", currency: "PEN" } }

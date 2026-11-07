@@ -1,0 +1,8 @@
+# Perfil dev: PostgreSQL local. Credenciales SOLO de desarrollo (ADR-011), sobreescribibles por entorno.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/kitdb}
+    username: ${DB_USER:kit}
+    password: ${DB_PASSWORD:kit}
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed

@@ -1,0 +1,27 @@
+schema: spec-driven
+
+# Contexto del proyecto: solo restricciones que el agente no puede inferir leyendo el código.
+context: |
+  Idioma de los artefactos: español. Los identificadores de código van en inglés (ADR-015).
+  Trazabilidad obligatoria: cada requisito cita su regla de negocio (BR-<dominio>-<nnn>) y su hecho de Wynxx (WXI-...);
+  la referencia al código (COB:<archivo>:<línea>) solo se registra si el propio artefacto de Wynxx la cita.
+  No se dispone del código COBOL: la fuente son los artefactos de Wynxx. Nivel de evidencia E0-E3;
+  sin salidas reales del legado el máximo es E2 y no se declara equivalencia funcional completa.
+  Las specs describen comportamiento observable (entradas, salidas, errores), nunca clases ni librerías.
+  Cualquier cambio de comportamiento respecto al legado es una desviación (DESV-nnn) que requiere aprobación.
+  Arquitectura común YA decidida (prompts/anexos/A1_ADR_COMUNES.md): microservicios por dominio;
+  backend Java 21 + Spring Boot 3.x + Maven con Clean Architecture; frontend React + TypeScript como
+  micro-frontend con Clean Architecture; contratos OpenAPI 3.1 contract-first con errores RFC 9457;
+  dinero como decimal; PostgreSQL en contenedor (H2 en modo nodocker); Docker opcional.
+  Las excepciones a un ADR se proponen como EXC-nnn y esperan aprobación.
+
+rules:
+  proposal:
+    - Cita los IDs WXI- y BR- de origen y declara explícitamente lo que queda fuera de alcance.
+  specs:
+    - Cada requisito incluye una línea "Trazas: BR-... | WXI-... | COB:archivo:línea (si Wynxx lo cita) | E<n>" (máx. 500 caracteres de descripción).
+    - Cada escenario usa WHEN/THEN y corresponde a un caso de prueba (E2 como mínimo).
+  design:
+    - Referencia los ADR comunes (A1) y particulariza el diseño del servicio y del micro-frontend; no repitas los ADR.
+  tasks:
+    - Incluye una tarea de prueba de equivalencia por cada regla BR- y tareas de contrato, datos, backend, micro-frontend y ejecución local.

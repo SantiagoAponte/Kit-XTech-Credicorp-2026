@@ -1,0 +1,74 @@
+# Composición local del kit. Perfiles:
+#   db   -> solo PostgreSQL            (modo "mixto")
+#   full -> base de datos + backend + micro-frontend + shell   (modo "docker")
+#   sim  -> simulador de dominios vecinos (opcional, se puede combinar con db/full)
+# Las rutas asumen el espacio de trabajo del equipo: backend/ frontend/ shell/ contracts/ junto a local-stack/.
+name: kit-local
+
+services:
+  db:
+    image: postgres:16-alpine
+    profiles: ["db", "full"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kitdb}
+      POSTGRES_USER: ${POSTGRES_USER:-kit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kit}
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ../backend
+    profiles: ["full"]
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-kitdb}
+      DB_USER: ${POSTGRES_USER:-kit}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-kit}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+
+  frontend:
+    build:
+      context: ../frontend
+    profiles: ["full"]
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5174}:5174"
+
+  shell:
+    build:
+      context: ../shell
+      args:
+        VITE_REMOTE_EXAMPLE_URL: ${VITE_REMOTE_EXAMPLE_URL:-http://localhost:5174/remoteEntry.js}
+    profiles: ["full"]
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${SHELL_PORT:-5173}:5173"
+
+  simulator:
+    build:
+      context: ./simulator
+    profiles: ["sim"]
+    environment:
+      CONTRACTS_DIR: /contracts/neighbors
+    volumes:
+      - ../contracts:/contracts:ro
+    ports:
+      - "127.0.0.1:${SIMULATOR_PORT:-8090}:8090"
+
+volumes:
+  pgdata:

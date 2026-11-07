@@ -1,0 +1,9 @@
+{
+  "name": "neighbor-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Simulador mínimo de dominios vecinos: sirve respuestas de ejemplo definidas en contracts/neighbors/*.openapi.yaml",
+  "scripts": { "start": "node server.mjs" },
+  "dependencies": { "yaml": "^2.8.0" }
+}

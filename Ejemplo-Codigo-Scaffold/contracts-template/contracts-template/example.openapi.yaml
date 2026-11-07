@@ -1,0 +1,137 @@
+openapi: 3.1.0
+info:
+  title: Example Service API (kit base)
+  version: 1.0.0
+  description: >
+    Contrato de ejemplo del kit. Los equipos lo reemplazan por el de su dominio
+    (contracts/<dominio>.openapi.yaml) siguiendo prompts/anexos/A4_FORMATO_CONTRATOS.md.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/pings:
+    post:
+      operationId: createPing
+      summary: Registra un ping (caso de ejemplo del kit)
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+        - name: X-Correlation-Id
+          in: header
+          required: false
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePingRequest' }
+      responses:
+        '201':
+          description: Ping registrado
+          headers:
+            X-Correlation-Id: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ping' }
+        '200':
+          description: Repetición idempotente (misma Idempotency-Key); devuelve el ping original
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ping' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+    get:
+      operationId: listPings
+      summary: Lista pings con paginación
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Página de pings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PingPage' }
+  /api/v1/pings/{id}:
+    get:
+      operationId: getPing
+      summary: Obtiene un ping por identificador
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Ping
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ping' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  schemas:
+    CreatePingRequest:
+      type: object
+      required: [message, amount]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          description: Texto del ping. Regla EX-0002 (422) si supera 140 caracteres.
+        amount:
+          $ref: '#/components/schemas/Money'
+    Ping:
+      type: object
+      required: [id, message, amount, receivedAt]
+      properties:
+        id: { type: string }
+        message: { type: string }
+        amount: { $ref: '#/components/schemas/Money' }
+        fee:
+          $ref: '#/components/schemas/Money'
+          description: Comisión de ejemplo = 0.50% del importe, redondeo HALF_UP a 2 decimales (regla EX-R01)
+        receivedAt: { type: string, format: date-time }
+    PingPage:
+      type: object
+      required: [items, page, size, totalElements]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Ping' }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: string
+          pattern: '^-?\d+(\.\d{1,2})?$'
+          description: Decimal como texto (nunca número de coma flotante)
+        currency: { type: string, enum: [PEN, USD, EUR] }
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string, description: Código estable del catálogo de errores }
+        instance: { type: string }
+        traceId: { type: string }
+  responses:
+    BadRequest:
+      description: Formato inválido
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    BusinessRuleViolation:
+      description: Regla de negocio violada
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: No existe
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
